@@ -1,0 +1,10 @@
+<library path="sura_sensors">
+  <class
+    name="sura_sensors/MagnetometerBroadcaster"
+    type="sura_sensors::MagnetometerBroadcaster"
+    base_class_type="controller_interface::ControllerInterface">
+    <description>
+      Broadcasters data from ros2_control state interfaces.
+    </description>
+  </class>
+</library>

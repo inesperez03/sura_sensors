@@ -13,6 +13,9 @@
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>diagnostic_msgs</depend>
+  <depend>controller_interface</depend>
+  <depend>pluginlib</depend>
+  <depend>rclcpp_lifecycle</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

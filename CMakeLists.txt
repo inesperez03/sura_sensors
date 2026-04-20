@@ -7,7 +7,10 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_lifecycle REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(pluginlib REQUIRED)
+find_package(controller_interface REQUIRED)
 
 include(ExternalProject)
 
@@ -40,8 +43,7 @@ if(TARGET_RASPBERRY)
   set(NAVIGATOR_LIB "${NAVIGATOR_DIR}/${NAVIGATOR_ARCH}/libbluerobotics_navigator.so")
 endif()
 
-include_directories(include)
-
+# Nodos
 add_executable(battery_node
   src/battery_node.cpp
 )
@@ -58,6 +60,29 @@ ament_target_dependencies(battery_node
 ament_target_dependencies(gps_node
   rclcpp
   sensor_msgs
+)
+
+# Broadcaster
+add_library(${PROJECT_NAME} SHARED
+  src/broadcasters/magnetometer_broadcaster.cpp
+)
+
+target_include_directories(${PROJECT_NAME} PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+
+ament_target_dependencies(${PROJECT_NAME}
+  controller_interface
+  pluginlib
+  rclcpp
+  rclcpp_lifecycle
+  sensor_msgs
+)
+
+pluginlib_export_plugin_description_file(
+  controller_interface
+  sura_sensors_plugins.xml
 )
 
 if(TARGET_RASPBERRY)
@@ -77,26 +102,37 @@ if(TARGET_RASPBERRY)
   target_include_directories(gps_node PRIVATE
     include
   )
-
   target_compile_definitions(gps_node PRIVATE TARGET_RASPBERRY)
+
 else()
   target_include_directories(battery_node PRIVATE
     include
   )
-
   target_compile_definitions(battery_node PRIVATE TARGET_DESKTOP)
 
   target_include_directories(gps_node PRIVATE
     include
   )
-
   target_compile_definitions(gps_node PRIVATE TARGET_DESKTOP)
 endif()
 
 install(TARGETS
   battery_node
   gps_node
-  DESTINATION lib/${PROJECT_NAME}
+  ${PROJECT_NAME}
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION lib/${PROJECT_NAME}
+)
+
+install(
+  DIRECTORY include/
+  DESTINATION include
+)
+
+install(
+  FILES sura_sensors_plugins.xml
+  DESTINATION share/${PROJECT_NAME}
 )
 
 ament_package()
