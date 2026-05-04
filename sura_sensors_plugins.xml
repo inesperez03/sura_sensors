@@ -4,7 +4,24 @@
     type="sura_sensors::MagnetometerBroadcaster"
     base_class_type="controller_interface::ControllerInterface">
     <description>
-      Broadcasters data from ros2_control state interfaces.
+      Broadcast magnetometer data from ros2_control state interfaces.
+    </description>
+  </class>
+
+  <class
+    name="sura_sensors/PressureBroadcaster"
+    type="sura_sensors::PressureBroadcaster"
+    base_class_type="controller_interface::ControllerInterface">
+    <description>
+      Broadcasts pressure-derived pose from ros2_control state interfaces.
+    </description>
+  </class>
+  <class
+    name="sura_sensors/DvlBroadcaster"
+    type="sura_sensors::DvlBroadcaster"
+    base_class_type="controller_interface::ControllerInterface">
+    <description>
+      DVL broadcaster
     </description>
   </class>
 </library>
