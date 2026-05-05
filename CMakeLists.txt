@@ -9,6 +9,12 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(diagnostic_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(controller_interface REQUIRED)
 
@@ -52,6 +58,10 @@ add_executable(gps_node
   src/gps_node.cpp
 )
 
+add_executable(gps_anchor_node
+  src/gps_anchor_node.cpp
+)
+
 ament_target_dependencies(battery_node
   rclcpp
   sensor_msgs
@@ -60,6 +70,23 @@ ament_target_dependencies(battery_node
 ament_target_dependencies(gps_node
   rclcpp
   sensor_msgs
+)
+
+ament_target_dependencies(gps_anchor_node
+  rclcpp
+  sensor_msgs
+  geometry_msgs
+  nav_msgs
+  tf2
+  tf2_ros
+)
+
+target_include_directories(gps_node PRIVATE
+  include
+)
+
+target_include_directories(gps_anchor_node PRIVATE
+  include
 )
 
 # Broadcaster
@@ -98,27 +125,23 @@ if(TARGET_RASPBERRY)
   )
 
   target_compile_definitions(battery_node PRIVATE TARGET_RASPBERRY)
-
-  target_include_directories(gps_node PRIVATE
-    include
-  )
   target_compile_definitions(gps_node PRIVATE TARGET_RASPBERRY)
+  target_compile_definitions(gps_anchor_node PRIVATE TARGET_RASPBERRY)
 
 else()
   target_include_directories(battery_node PRIVATE
     include
   )
-  target_compile_definitions(battery_node PRIVATE TARGET_DESKTOP)
 
-  target_include_directories(gps_node PRIVATE
-    include
-  )
+  target_compile_definitions(battery_node PRIVATE TARGET_DESKTOP)
   target_compile_definitions(gps_node PRIVATE TARGET_DESKTOP)
+  target_compile_definitions(gps_anchor_node PRIVATE TARGET_DESKTOP)
 endif()
 
 install(TARGETS
   battery_node
   gps_node
+  gps_anchor_node
   ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib

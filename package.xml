@@ -3,19 +3,23 @@
 <package format="3">
   <name>sura_sensors</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>SURA sensors package</description>
   <maintainer email="inesperezedo@gmail.com">root</maintainer>
   <license>TODO: License declaration</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <depend>rclcpp</depend>
+  <depend>rclcpp_lifecycle</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>diagnostic_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
   <depend>controller_interface</depend>
   <depend>pluginlib</depend>
-  <depend>rclcpp_lifecycle</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
