@@ -3,6 +3,7 @@
 #include <deque>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -13,6 +14,7 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/transform_stamped.hpp"
 #include "nav_msgs/msg/path.hpp"
+#include "std_msgs/msg/float64.hpp"
 
 #include "tf2/LinearMath/Matrix3x3.h"
 #include "tf2/LinearMath/Quaternion.h"
@@ -140,6 +142,11 @@ double horizontal_accuracy_m(const sensor_msgs::msg::NavSatFix & fix)
   return std::sqrt(std::max(var_x, var_y));
 }
 
+double normalize_angle(const double angle)
+{
+  return std::atan2(std::sin(angle), std::cos(angle));
+}
+
 }  // namespace
 
 
@@ -162,6 +169,9 @@ public:
 
     base_frame_ = this->declare_parameter<std::string>(
       "base_frame", "blueboat/base_link_enu");
+
+    yaw_topic_ = this->declare_parameter<std::string>(
+      "yaw_topic", "");
 
     origin_mode_ = this->declare_parameter<std::string>(
       "origin_mode", "manual");
@@ -211,6 +221,13 @@ public:
       10,
       std::bind(&GpsAnchorNode::gps_callback, this, std::placeholders::_1));
 
+    if (!yaw_topic_.empty()) {
+      yaw_sub_ = this->create_subscription<std_msgs::msg::Float64>(
+        yaw_topic_,
+        10,
+        std::bind(&GpsAnchorNode::yaw_callback, this, std::placeholders::_1));
+    }
+
     if (origin_mode_ == "manual") {
       origin_ready_ = true;
 
@@ -231,8 +248,9 @@ public:
 
     RCLCPP_INFO(
       this->get_logger(),
-      "GPS anchor node started. gps_topic=%s world_frame=%s fastlio_map_frame=%s base_frame=%s anchor_sample_count=%d yaw_offset=%.3f rad",
+      "GPS anchor node started. gps_topic=%s yaw_topic=%s world_frame=%s fastlio_map_frame=%s base_frame=%s anchor_sample_count=%d yaw_offset=%.3f rad",
       gps_topic_.c_str(),
+      yaw_topic_.empty() ? "<disabled>" : yaw_topic_.c_str(),
       world_frame_.c_str(),
       fastlio_map_frame_.c_str(),
       base_frame_.c_str(),
@@ -241,6 +259,20 @@ public:
   }
 
 private:
+  void yaw_callback(const std_msgs::msg::Float64::SharedPtr msg)
+  {
+    if (!std::isfinite(msg->data)) {
+      RCLCPP_WARN_THROTTLE(
+        this->get_logger(),
+        *this->get_clock(),
+        3000,
+        "Ignoring invalid yaw sample");
+      return;
+    }
+
+    latest_yaw_rad_ = normalize_angle(msg->data);
+  }
+
   void gps_callback(const sensor_msgs::msg::NavSatFix::SharedPtr msg)
   {
     if (!is_valid_fix(*msg)) {
@@ -334,15 +366,16 @@ private:
       origin_altitude_);
   }
 
-  tf2::Matrix3x3 world_from_map_rotation() const
+  tf2::Matrix3x3 world_from_map_rotation(const double yaw_rad) const
   {
     tf2::Matrix3x3 yaw_rotation;
-    yaw_rotation.setRPY(0.0, 0.0, yaw_offset_rad_);
+    yaw_rotation.setRPY(0.0, 0.0, yaw_rad);
     return yaw_rotation;
   }
 
   bool compute_world_to_map_translation_estimate(
     const Enu & gps_enu,
+    const double yaw_world_map_rad,
     tf2::Vector3 & p_world_map_out)
   {
     geometry_msgs::msg::TransformStamped map_to_base_tf;
@@ -374,7 +407,7 @@ private:
       map_to_base_tf.transform.translation.y,
       map_to_base_tf.transform.translation.z);
 
-    const tf2::Matrix3x3 r_world_map = world_from_map_rotation();
+    const tf2::Matrix3x3 r_world_map = world_from_map_rotation(yaw_world_map_rad);
 
     p_world_map_out = p_world_base - (r_world_map * p_map_base);
 
@@ -383,22 +416,41 @@ private:
 
   void collect_anchor_sample(const Enu & gps_enu)
   {
+    const double yaw_world_map_rad =
+      latest_yaw_rad_.has_value() ?
+      normalize_angle(*latest_yaw_rad_ + yaw_offset_rad_) :
+      yaw_offset_rad_;
+
+    if (!yaw_topic_.empty() && !latest_yaw_rad_.has_value()) {
+      RCLCPP_WARN_THROTTLE(
+        this->get_logger(),
+        *this->get_clock(),
+        2000,
+        "Waiting for initial yaw samples on %s before anchoring",
+        yaw_topic_.c_str());
+      return;
+    }
+
     tf2::Vector3 p_world_map_estimate;
 
-    if (!compute_world_to_map_translation_estimate(gps_enu, p_world_map_estimate)) {
+    if (!compute_world_to_map_translation_estimate(
+        gps_enu, yaw_world_map_rad, p_world_map_estimate))
+    {
       return;
     }
 
     anchor_translation_samples_.push_back(p_world_map_estimate);
+    anchor_yaw_samples_.push_back(yaw_world_map_rad);
 
     RCLCPP_INFO(
       this->get_logger(),
-      "Collected FAST-LIO anchor estimate %zu / %d: world->map translation estimate [%.3f, %.3f, %.3f]",
+      "Collected FAST-LIO anchor estimate %zu / %d: world->map translation estimate [%.3f, %.3f, %.3f], yaw=%.3f rad",
       anchor_translation_samples_.size(),
       anchor_sample_count_,
       p_world_map_estimate.x(),
       p_world_map_estimate.y(),
-      p_world_map_estimate.z());
+      p_world_map_estimate.z(),
+      yaw_world_map_rad);
 
     if (static_cast<int>(anchor_translation_samples_.size()) < anchor_sample_count_) {
       return;
@@ -418,7 +470,18 @@ private:
     const double count = static_cast<double>(anchor_translation_samples_.size());
     const tf2::Vector3 p_world_map = p_world_map_sum / count;
 
-    const tf2::Matrix3x3 r_world_map = world_from_map_rotation();
+    double yaw_sin_sum = 0.0;
+    double yaw_cos_sum = 0.0;
+    for (const double sample : anchor_yaw_samples_) {
+      yaw_sin_sum += std::sin(sample);
+      yaw_cos_sum += std::cos(sample);
+    }
+
+    const double averaged_yaw_rad = anchor_yaw_samples_.empty() ?
+      yaw_offset_rad_ :
+      std::atan2(yaw_sin_sum, yaw_cos_sum);
+
+    const tf2::Matrix3x3 r_world_map = world_from_map_rotation(averaged_yaw_rad);
 
     tf2::Quaternion q_world_map;
     r_world_map.getRotation(q_world_map);
@@ -444,14 +507,14 @@ private:
 
     RCLCPP_INFO(
       this->get_logger(),
-      "Published averaged static TF %s -> %s from %zu estimates. Translation [%.3f, %.3f, %.3f], yaw_offset=%.3f rad",
+      "Published averaged static TF %s -> %s from %zu estimates. Translation [%.3f, %.3f, %.3f], yaw=%.3f rad",
       world_frame_.c_str(),
       fastlio_map_frame_.c_str(),
       anchor_translation_samples_.size(),
       p_world_map.x(),
       p_world_map.y(),
       p_world_map.z(),
-      yaw_offset_rad_);
+      averaged_yaw_rad);
   }
 
   void publish_gps_pose(
@@ -485,6 +548,7 @@ private:
   }
 
   std::string gps_topic_;
+  std::string yaw_topic_;
   std::string world_frame_;
   std::string fastlio_map_frame_;
   std::string base_frame_;
@@ -504,10 +568,13 @@ private:
   bool origin_ready_{false};
   bool anchor_ready_{false};
 
+  std::optional<double> latest_yaw_rad_;
   std::deque<sensor_msgs::msg::NavSatFix> origin_samples_;
   std::vector<tf2::Vector3> anchor_translation_samples_;
+  std::vector<double> anchor_yaw_samples_;
 
   rclcpp::Subscription<sensor_msgs::msg::NavSatFix>::SharedPtr gps_sub_;
+  rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr yaw_sub_;
   rclcpp::Publisher<geometry_msgs::msg::PoseStamped>::SharedPtr pose_pub_;
   rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr path_pub_;
 
