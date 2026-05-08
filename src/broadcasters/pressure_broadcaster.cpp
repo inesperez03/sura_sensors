@@ -140,7 +140,7 @@ controller_interface::return_type PressureBroadcaster::update(
 
   const double pressure_pa = state_interfaces_[0].get_value();
 
-  if (!std::isfinite(pressure_pa) || pressure_pa <= 0.0) {
+  if (!std::isfinite(pressure_pa) || pressure_pa < 0.0) {
     RCLCPP_WARN_THROTTLE(
       get_node()->get_logger(),
       *get_node()->get_clock(),
@@ -154,7 +154,6 @@ controller_interface::return_type PressureBroadcaster::update(
   msg.header.stamp = time;
   msg.header.frame_id = frame_id_;
 
-  // Sin conversión: el dato ya viene en pascales.
   msg.fluid_pressure = pressure_pa;
   msg.variance = pressure_variance_;
 

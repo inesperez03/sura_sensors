@@ -10,7 +10,7 @@
 namespace sura_sensors
 {
 
-class Dvl75DistanceBroadcaster : public controller_interface::ControllerInterface
+class Dvl75AltitudeBroadcaster : public controller_interface::ControllerInterface
 {
 public:
   controller_interface::CallbackReturn on_init() override;

@@ -1,16 +1,16 @@
-#include "sura_sensors/broadcasters/dvl75_distance_broadcaster.hpp"
+#include "sura_sensors/broadcasters/dvl75_altitude_broadcaster.hpp"
 
 #include <pluginlib/class_list_macros.hpp>
 
 namespace sura_sensors
 {
 
-controller_interface::CallbackReturn Dvl75DistanceBroadcaster::on_init()
+controller_interface::CallbackReturn Dvl75AltitudeBroadcaster::on_init()
 {
   try {
     auto_declare<std::string>("sensor_name", "dvl_sensor");
     auto_declare<std::string>("frame_id", "bluerov2/dvl_link");
-    auto_declare<std::string>("topic_name", "~/range");
+    auto_declare<std::string>("topic_name", "~/altitude");
 
     auto_declare<double>("field_of_view", 0.0);
     auto_declare<double>("min_range", 0.05);
@@ -23,13 +23,13 @@ controller_interface::CallbackReturn Dvl75DistanceBroadcaster::on_init()
 }
 
 controller_interface::InterfaceConfiguration
-Dvl75DistanceBroadcaster::command_interface_configuration() const
+Dvl75AltitudeBroadcaster::command_interface_configuration() const
 {
   return {controller_interface::interface_configuration_type::NONE};
 }
 
 controller_interface::InterfaceConfiguration
-Dvl75DistanceBroadcaster::state_interface_configuration() const
+Dvl75AltitudeBroadcaster::state_interface_configuration() const
 {
   const auto sensor_name = get_node()->get_parameter("sensor_name").as_string();
 
@@ -40,7 +40,7 @@ Dvl75DistanceBroadcaster::state_interface_configuration() const
     }};
 }
 
-controller_interface::CallbackReturn Dvl75DistanceBroadcaster::on_configure(
+controller_interface::CallbackReturn Dvl75AltitudeBroadcaster::on_configure(
   const rclcpp_lifecycle::State &)
 {
   sensor_name_ = get_node()->get_parameter("sensor_name").as_string();
@@ -57,7 +57,7 @@ controller_interface::CallbackReturn Dvl75DistanceBroadcaster::on_configure(
   return controller_interface::CallbackReturn::SUCCESS;
 }
 
-controller_interface::CallbackReturn Dvl75DistanceBroadcaster::on_activate(
+controller_interface::CallbackReturn Dvl75AltitudeBroadcaster::on_activate(
   const rclcpp_lifecycle::State &)
 {
   if (!publisher_) {
@@ -73,7 +73,7 @@ controller_interface::CallbackReturn Dvl75DistanceBroadcaster::on_activate(
   return controller_interface::CallbackReturn::SUCCESS;
 }
 
-controller_interface::CallbackReturn Dvl75DistanceBroadcaster::on_deactivate(
+controller_interface::CallbackReturn Dvl75AltitudeBroadcaster::on_deactivate(
   const rclcpp_lifecycle::State &)
 {
   if (publisher_) {
@@ -83,7 +83,7 @@ controller_interface::CallbackReturn Dvl75DistanceBroadcaster::on_deactivate(
   return controller_interface::CallbackReturn::SUCCESS;
 }
 
-controller_interface::return_type Dvl75DistanceBroadcaster::update(
+controller_interface::return_type Dvl75AltitudeBroadcaster::update(
   const rclcpp::Time & time,
   const rclcpp::Duration &)
 {
@@ -91,7 +91,7 @@ controller_interface::return_type Dvl75DistanceBroadcaster::update(
     return controller_interface::return_type::OK;
   }
 
-  const double distance_z = state_interfaces_[0].get_value();
+  const double altitude = state_interfaces_[0].get_value();
 
   sensor_msgs::msg::Range msg;
   msg.header.stamp = time;
@@ -101,7 +101,7 @@ controller_interface::return_type Dvl75DistanceBroadcaster::update(
   msg.field_of_view = field_of_view_;
   msg.min_range = min_range_;
   msg.max_range = max_range_;
-  msg.range = distance_z;
+  msg.range = altitude;
 
   publisher_->publish(msg);
 
@@ -111,5 +111,5 @@ controller_interface::return_type Dvl75DistanceBroadcaster::update(
 }  // namespace sura_sensors
 
 PLUGINLIB_EXPORT_CLASS(
-  sura_sensors::Dvl75DistanceBroadcaster,
+  sura_sensors::Dvl75AltitudeBroadcaster,
   controller_interface::ControllerInterface)
