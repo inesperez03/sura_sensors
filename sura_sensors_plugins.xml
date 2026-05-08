@@ -17,11 +17,27 @@
     </description>
   </class>
   <class
-    name="sura_sensors/DvlBroadcaster"
-    type="sura_sensors::DvlBroadcaster"
+    name="sura_sensors/DvlVelBroadcaster"
+    type="sura_sensors::DvlVelBroadcaster"
     base_class_type="controller_interface::ControllerInterface">
     <description>
-      DVL broadcaster
+      DVL velocity broadcaster
+    </description>
+  </class>
+  <class
+    name="sura_sensors/Dvl75DistanceBroadcaster"
+    type="sura_sensors::Dvl75DistanceBroadcaster"
+    base_class_type="controller_interface::ControllerInterface">
+    <description>
+      DVL distance broadcaster
+    </description>
+  </class>
+  <class
+    name="sura_sensors/Dvl75GpsBroadcaster"
+    type="sura_sensors::Dvl75GpsBroadcaster"
+    base_class_type="controller_interface::ControllerInterface">
+    <description>
+      DVL-75 GPS broadcaster publishing NavSatFix from real GPS retweeted by the DVL.
     </description>
   </class>
 </library>

@@ -1,16 +1,16 @@
-#pragma once
+#ifndef SURA_SENSORS_BROADCASTERS_DVL_VEL_BROADCASTER_HPP_
+#define SURA_SENSORS_BROADCASTERS_DVL_VEL_BROADCASTER_HPP_
 
 #include <string>
 
 #include <controller_interface/controller_interface.hpp>
-#include <geometry_msgs/msg/twist_stamped.hpp>
+#include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
 #include <rclcpp_lifecycle/lifecycle_publisher.hpp>
-#include <rclcpp_lifecycle/state.hpp>
 
 namespace sura_sensors
 {
 
-class DvlBroadcaster : public controller_interface::ControllerInterface
+class DvlVelBroadcaster : public controller_interface::ControllerInterface
 {
 public:
   controller_interface::CallbackReturn on_init() override;
@@ -37,7 +37,15 @@ private:
   std::string frame_id_;
   std::string topic_name_;
 
-  rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::TwistStamped>::SharedPtr publisher_;
+  double min_linear_velocity_covariance_{0.01};
+  double max_linear_velocity_covariance_{999.0};
+  double angular_velocity_covariance_{99999.0};
+
+  rclcpp_lifecycle::LifecyclePublisher<
+    geometry_msgs::msg::TwistWithCovarianceStamped
+  >::SharedPtr publisher_;
 };
 
 }  // namespace sura_sensors
+
+#endif  // SURA_SENSORS_BROADCASTERS_DVL_VEL_BROADCASTER_HPP_

@@ -67,7 +67,9 @@ ament_target_dependencies(gps_node
 add_library(${PROJECT_NAME} SHARED
   src/broadcasters/magnetometer_broadcaster.cpp
   src/broadcasters/pressure_broadcaster.cpp
-  src/broadcasters/dvl75_broadcaster.cpp
+  src/broadcasters/dvl75_vel_broadcaster.cpp
+  src/broadcasters/dvl75_distance_broadcaster.cpp 
+  src/broadcasters/dvl75_gps_broadcaster.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

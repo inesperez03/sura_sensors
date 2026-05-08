@@ -1,16 +1,16 @@
-#ifndef SURA_SENSORS_BROADCASTERS_PRESSURE_BROADCASTER_HPP_
-#define SURA_SENSORS_BROADCASTERS_PRESSURE_BROADCASTER_HPP_
+#ifndef SURA_SENSORS_BROADCASTERS_DVL75_GPS_BROADCASTER_HPP_
+#define SURA_SENSORS_BROADCASTERS_DVL75_GPS_BROADCASTER_HPP_
 
 #include <string>
 
 #include <controller_interface/controller_interface.hpp>
 #include <rclcpp_lifecycle/lifecycle_publisher.hpp>
-#include <sensor_msgs/msg/fluid_pressure.hpp>
+#include <sensor_msgs/msg/nav_sat_fix.hpp>
 
 namespace sura_sensors
 {
 
-class PressureBroadcaster : public controller_interface::ControllerInterface
+class Dvl75GpsBroadcaster : public controller_interface::ControllerInterface
 {
 public:
   controller_interface::CallbackReturn on_init() override;
@@ -37,13 +37,13 @@ private:
   std::string frame_id_;
   std::string topic_name_;
 
-  double pressure_variance_{0.0};
+  double position_covariance_{0.0};
 
   rclcpp_lifecycle::LifecyclePublisher<
-    sensor_msgs::msg::FluidPressure
+    sensor_msgs::msg::NavSatFix
   >::SharedPtr publisher_;
 };
 
 }  // namespace sura_sensors
 
-#endif  // SURA_SENSORS_BROADCASTERS_PRESSURE_BROADCASTER_HPP_
+#endif  // SURA_SENSORS_BROADCASTERS_DVL75_GPS_BROADCASTER_HPP_

@@ -1,16 +1,16 @@
-#ifndef SURA_SENSORS_BROADCASTERS_PRESSURE_BROADCASTER_HPP_
-#define SURA_SENSORS_BROADCASTERS_PRESSURE_BROADCASTER_HPP_
+#pragma once
 
 #include <string>
 
 #include <controller_interface/controller_interface.hpp>
 #include <rclcpp_lifecycle/lifecycle_publisher.hpp>
-#include <sensor_msgs/msg/fluid_pressure.hpp>
+#include <rclcpp_lifecycle/state.hpp>
+#include <sensor_msgs/msg/range.hpp>
 
 namespace sura_sensors
 {
 
-class PressureBroadcaster : public controller_interface::ControllerInterface
+class Dvl75DistanceBroadcaster : public controller_interface::ControllerInterface
 {
 public:
   controller_interface::CallbackReturn on_init() override;
@@ -37,13 +37,11 @@ private:
   std::string frame_id_;
   std::string topic_name_;
 
-  double pressure_variance_{0.0};
+  double field_of_view_{0.0};
+  double min_range_{0.05};
+  double max_range_{50.0};
 
-  rclcpp_lifecycle::LifecyclePublisher<
-    sensor_msgs::msg::FluidPressure
-  >::SharedPtr publisher_;
+  rclcpp_lifecycle::LifecyclePublisher<sensor_msgs::msg::Range>::SharedPtr publisher_;
 };
 
 }  // namespace sura_sensors
-
-#endif  // SURA_SENSORS_BROADCASTERS_PRESSURE_BROADCASTER_HPP_
