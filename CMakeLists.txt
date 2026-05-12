@@ -10,6 +10,10 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(controller_interface REQUIRED)
 
@@ -18,9 +22,23 @@ add_executable(gps_node
   src/gps_node.cpp
 )
 
+add_executable(gps_anchor_node
+  src/gps_anchor_node.cpp
+)
+
 ament_target_dependencies(gps_node
   rclcpp
   sensor_msgs
+)
+
+ament_target_dependencies(gps_anchor_node
+  rclcpp
+  sensor_msgs
+  geometry_msgs
+  nav_msgs
+  tf2
+  tf2_ros
+  std_msgs
 )
 
 # Broadcasters
@@ -29,6 +47,7 @@ add_library(${PROJECT_NAME} SHARED
   src/broadcasters/magnetometer_broadcaster.cpp
   src/broadcasters/pressure_broadcaster.cpp
   src/broadcasters/battery_broadcaster.cpp
+  src/broadcasters/gps_broadcaster.cpp
   src/broadcasters/dvl75_vel_broadcaster.cpp
   src/broadcasters/dvl75_altitude_broadcaster.cpp
   src/broadcasters/dvl75_gps_broadcaster.cpp
@@ -57,8 +76,13 @@ target_include_directories(gps_node PRIVATE
   include
 )
 
+target_include_directories(gps_anchor_node PRIVATE
+  include
+)
+
 install(TARGETS
   gps_node
+  gps_anchor_node
   ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
