@@ -13,7 +13,7 @@ controller_interface::CallbackReturn GpsBroadcaster::on_init()
   try {
     auto_declare<std::string>("sensor_name", "gps_sensor");
     auto_declare<std::string>("frame_id", "gps_frame");
-    auto_declare<std::string>("topic_name", "/sura/sensors/gps/fix");
+    auto_declare<std::string>("topic_name", "sensors/gps/fix");
     auto_declare<double>("position_covariance", 0.0);
   } catch (const std::exception &) {
     return controller_interface::CallbackReturn::ERROR;

@@ -15,7 +15,7 @@ controller_interface::CallbackReturn PressureBroadcaster::on_init()
   try {
     auto_declare<std::string>("sensor_name", "pressure_sensor");
     auto_declare<std::string>("frame_id", "bluerov2/base_link");
-    auto_declare<std::string>("topic_name", "/pressure_broadcaster/fluid_pressure");
+    auto_declare<std::string>("topic_name", "pressure_broadcaster/fluid_pressure");
 
     auto_declare<double>("pressure_variance", 0.0);
 

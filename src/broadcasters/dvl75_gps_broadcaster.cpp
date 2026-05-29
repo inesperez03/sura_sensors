@@ -14,7 +14,7 @@ controller_interface::CallbackReturn Dvl75GpsBroadcaster::on_init()
   try {
     auto_declare<std::string>("sensor_name", "dvl_sensor");
     auto_declare<std::string>("frame_id", "bluerov2/dvl_link");
-    auto_declare<std::string>("topic_name", "/dvl75/gps/fix");
+    auto_declare<std::string>("topic_name", "dvl75/gps/fix");
 
     auto_declare<double>("position_covariance", 0.0);
   } catch (const std::exception &) {

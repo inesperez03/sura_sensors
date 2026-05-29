@@ -194,19 +194,19 @@ public:
     tf_listener_(tf_buffer_)
   {
     gps_topic_ = this->declare_parameter<std::string>(
-      "gps_topic", "/sura/sensors/gps/fix");
+      "gps_topic", "sensors/gps/fix");
 
     world_frame_ = this->declare_parameter<std::string>(
       "world_frame", "world_enu");
 
     fastlio_map_frame_ = this->declare_parameter<std::string>(
-      "fastlio_map_frame", "blueboat/map");
+      "fastlio_map_frame", "map");
 
     position_frame_ = this->declare_parameter<std::string>(
       "position_frame", "gps_frame");
 
     base_frame_ = this->declare_parameter<std::string>(
-      "base_frame", "blueboat/base_link_enu");
+      "base_frame", "base_link_enu");
 
     yaw_topic_ = this->declare_parameter<std::string>(
       "yaw_topic", "");
@@ -241,6 +241,9 @@ public:
     max_horizontal_accuracy_m_ = this->declare_parameter<double>(
       "max_horizontal_accuracy_m", 20.0);
 
+    log_invalid_fixes_ = this->declare_parameter<bool>(
+      "log_invalid_fixes", false);
+
     publish_path_ = this->declare_parameter<bool>(
       "publish_path", true);
 
@@ -255,10 +258,10 @@ public:
     }
 
     pose_pub_ = this->create_publisher<geometry_msgs::msg::PoseStamped>(
-      "/sura/sensors/gps/pose_world_enu", 10);
+      "sensors/gps/pose_world_enu", 10);
 
     path_pub_ = this->create_publisher<nav_msgs::msg::Path>(
-      "/sura/sensors/gps/path_world_enu", 10);
+      "sensors/gps/path_world_enu", 10);
 
     static_tf_broadcaster_ =
       std::make_shared<tf2_ros::StaticTransformBroadcaster>(this);
@@ -327,14 +330,16 @@ private:
   void gps_callback(const sensor_msgs::msg::NavSatFix::SharedPtr msg)
   {
     if (!is_valid_fix(*msg)) {
-      RCLCPP_WARN_THROTTLE(
-        this->get_logger(),
-        *this->get_clock(),
-        3000,
-        "Ignoring invalid GPS fix. status=%d lat=%.8f lon=%.8f",
-        msg->status.status,
-        msg->latitude,
-        msg->longitude);
+      if (log_invalid_fixes_) {
+        RCLCPP_WARN_THROTTLE(
+          this->get_logger(),
+          *this->get_clock(),
+          3000,
+          "Ignoring invalid GPS fix. status=%d lat=%.8f lon=%.8f",
+          msg->status.status,
+          msg->latitude,
+          msg->longitude);
+      }
       return;
     }
 
@@ -661,6 +666,7 @@ private:
 
   bool publish_path_;
   bool use_manual_base_yaw_;
+  bool log_invalid_fixes_;
 
   bool origin_ready_{false};
   bool anchor_ready_{false};

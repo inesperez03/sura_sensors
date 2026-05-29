@@ -33,9 +33,12 @@ public:
     const rclcpp::Duration & period) override;
 
 private:
+  double battery_percentage(double voltage) const;
+
   std::string sensor_name_;
   std::string frame_id_;
   std::string topic_name_;
+  int cell_count_{4};
 
   rclcpp_lifecycle::LifecyclePublisher<sensor_msgs::msg::BatteryState>::SharedPtr publisher_;
 };

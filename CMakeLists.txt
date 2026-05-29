@@ -10,6 +10,10 @@ find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
+find_package(tf2 REQUIRED)
+find_package(tf2_ros REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(controller_interface REQUIRED)
 
@@ -18,9 +22,23 @@ add_executable(gps_node
   src/gps_node.cpp
 )
 
+add_executable(gps_anchor_node
+  src/gps_anchor_node.cpp
+)
+
 ament_target_dependencies(gps_node
   rclcpp
   sensor_msgs
+)
+
+ament_target_dependencies(gps_anchor_node
+  rclcpp
+  sensor_msgs
+  geometry_msgs
+  nav_msgs
+  std_msgs
+  tf2
+  tf2_ros
 )
 
 # Broadcasters
@@ -48,6 +66,8 @@ ament_target_dependencies(${PROJECT_NAME}
   rclcpp_lifecycle
   sensor_msgs
   geometry_msgs
+  nav_msgs
+  std_msgs
 )
 
 pluginlib_export_plugin_description_file(
@@ -59,8 +79,13 @@ target_include_directories(gps_node PRIVATE
   include
 )
 
+target_include_directories(gps_anchor_node PRIVATE
+  include
+)
+
 install(TARGETS
   gps_node
+  gps_anchor_node
   ${PROJECT_NAME}
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
