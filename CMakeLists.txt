@@ -47,6 +47,7 @@ add_library(${PROJECT_NAME} SHARED
   src/broadcasters/magnetometer_broadcaster.cpp
   src/broadcasters/pressure_broadcaster.cpp
   src/broadcasters/battery_broadcaster.cpp
+  src/broadcasters/leak_broadcaster.cpp
   src/broadcasters/altimeter_blueboat_broadcaster.cpp
   src/broadcasters/gps_broadcaster.cpp
   src/broadcasters/dvl75_vel_broadcaster.cpp
