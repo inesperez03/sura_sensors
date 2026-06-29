@@ -43,6 +43,7 @@ ament_target_dependencies(gps_anchor_node
 
 # Broadcasters
 add_library(${PROJECT_NAME} SHARED
+  src/broadcasters/alpha_joint_state_broadcaster.cpp
   src/broadcasters/imu_broadcaster.cpp
   src/broadcasters/magnetometer_broadcaster.cpp
   src/broadcasters/pressure_broadcaster.cpp
