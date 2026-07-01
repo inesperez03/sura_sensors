@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 
 #include <controller_interface/controller_interface.hpp>
@@ -36,6 +37,10 @@ private:
   std::string sensor_name_;
   std::string frame_id_;
   std::string topic_name_;
+
+  bool has_last_sample_time_{false};
+  int32_t last_sample_time_sec_{0};
+  uint32_t last_sample_time_nanosec_{0};
 
   rclcpp_lifecycle::LifecyclePublisher<sensor_msgs::msg::Imu>::SharedPtr publisher_;
 };

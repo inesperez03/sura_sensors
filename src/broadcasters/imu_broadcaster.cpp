@@ -42,6 +42,8 @@ ImuBroadcaster::state_interface_configuration() const
       sensor_name + "/linear_acceleration.x",
       sensor_name + "/linear_acceleration.y",
       sensor_name + "/linear_acceleration.z",
+      sensor_name + "/sample_time.sec",
+      sensor_name + "/sample_time.nanosec",
     }};
 }
 
@@ -65,7 +67,7 @@ controller_interface::CallbackReturn ImuBroadcaster::on_activate(
     return controller_interface::CallbackReturn::ERROR;
   }
 
-  if (state_interfaces_.size() != 10) {
+  if (state_interfaces_.size() != 12) {
     return controller_interface::CallbackReturn::ERROR;
   }
 
@@ -91,12 +93,29 @@ controller_interface::return_type ImuBroadcaster::update(
     return controller_interface::return_type::OK;
   }
 
-  if (state_interfaces_.size() != 10) {
+  if (state_interfaces_.size() != 12) {
     return controller_interface::return_type::OK;
   }
 
   sensor_msgs::msg::Imu msg;
-  msg.header.stamp = time;
+  msg.header.stamp.sec = static_cast<int32_t>(state_interfaces_[10].get_value());
+  msg.header.stamp.nanosec = static_cast<uint32_t>(state_interfaces_[11].get_value());
+  if (msg.header.stamp.sec == 0 && msg.header.stamp.nanosec == 0) {
+    msg.header.stamp = time;
+  }
+
+  if (
+    has_last_sample_time_ &&
+    msg.header.stamp.sec == last_sample_time_sec_ &&
+    msg.header.stamp.nanosec == last_sample_time_nanosec_)
+  {
+    return controller_interface::return_type::OK;
+  }
+
+  has_last_sample_time_ = true;
+  last_sample_time_sec_ = msg.header.stamp.sec;
+  last_sample_time_nanosec_ = msg.header.stamp.nanosec;
+
   msg.header.frame_id = frame_id_;
 
   msg.orientation.x = state_interfaces_[0].get_value();

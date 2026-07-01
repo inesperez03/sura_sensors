@@ -37,6 +37,8 @@ MagnetometerBroadcaster::state_interface_configuration() const
       sensor_name + "/magnetic_field.x",
       sensor_name + "/magnetic_field.y",
       sensor_name + "/magnetic_field.z",
+      sensor_name + "/sample_time.sec",
+      sensor_name + "/sample_time.nanosec",
     }};
 }
 
@@ -68,10 +70,10 @@ controller_interface::CallbackReturn MagnetometerBroadcaster::on_activate(
     return controller_interface::CallbackReturn::ERROR;
   }
 
-  if (state_interfaces_.size() != 3) {
+  if (state_interfaces_.size() != 5) {
     RCLCPP_ERROR(
       get_node()->get_logger(),
-      "Expected 3 state interfaces, got %zu",
+      "Expected 5 state interfaces, got %zu",
       state_interfaces_.size());
     return controller_interface::CallbackReturn::ERROR;
   }
@@ -100,8 +102,29 @@ controller_interface::return_type MagnetometerBroadcaster::update(
     return controller_interface::return_type::OK;
   }
 
+  if (state_interfaces_.size() != 5) {
+    return controller_interface::return_type::OK;
+  }
+
   sensor_msgs::msg::MagneticField msg;
-  msg.header.stamp = time;
+  msg.header.stamp.sec = static_cast<int32_t>(state_interfaces_[3].get_value());
+  msg.header.stamp.nanosec = static_cast<uint32_t>(state_interfaces_[4].get_value());
+  if (msg.header.stamp.sec == 0 && msg.header.stamp.nanosec == 0) {
+    msg.header.stamp = time;
+  }
+
+  if (
+    has_last_sample_time_ &&
+    msg.header.stamp.sec == last_sample_time_sec_ &&
+    msg.header.stamp.nanosec == last_sample_time_nanosec_)
+  {
+    return controller_interface::return_type::OK;
+  }
+
+  has_last_sample_time_ = true;
+  last_sample_time_sec_ = msg.header.stamp.sec;
+  last_sample_time_nanosec_ = msg.header.stamp.nanosec;
+
   msg.header.frame_id = frame_id_;
 
   msg.magnetic_field.x = state_interfaces_[0].get_value();
