@@ -12,6 +12,7 @@ find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(sura_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(pluginlib REQUIRED)
@@ -54,6 +55,8 @@ add_library(${PROJECT_NAME} SHARED
   src/broadcasters/dvl75_vel_broadcaster.cpp
   src/broadcasters/dvl75_altitude_broadcaster.cpp
   src/broadcasters/dvl75_gps_broadcaster.cpp
+  src/broadcasters/dvla50_broadcaster.cpp
+  src/broadcasters/dvla50_twist_stamped_broadcaster.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
@@ -70,6 +73,7 @@ ament_target_dependencies(${PROJECT_NAME}
   geometry_msgs
   nav_msgs
   std_msgs
+  sura_msgs
 )
 
 pluginlib_export_plugin_description_file(

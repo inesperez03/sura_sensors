@@ -90,4 +90,20 @@
       DVL-75 GPS broadcaster publishing NavSatFix from real GPS retweeted by the DVL.
     </description>
   </class>
+  <class
+    name="sura_sensors/DvlA50Broadcaster"
+    type="sura_sensors::DvlA50Broadcaster"
+    base_class_type="controller_interface::ControllerInterface">
+    <description>
+      Water Linked DVL-A50 full report broadcaster
+    </description>
+  </class>
+  <class
+    name="sura_sensors/DvlA50TwistStampedBroadcaster"
+    type="sura_sensors::DvlA50TwistStampedBroadcaster"
+    base_class_type="controller_interface::ControllerInterface">
+    <description>
+      Water Linked DVL-A50 TwistStamped velocity broadcaster
+    </description>
+  </class>
 </library>
