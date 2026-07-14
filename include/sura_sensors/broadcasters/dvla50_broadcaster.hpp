@@ -38,6 +38,12 @@ private:
   std::string topic_name_;
 
   rclcpp_lifecycle::LifecyclePublisher<sura_msgs::msg::DVL>::SharedPtr publisher_;
+
+  bool has_last_logged_publish_{false};
+  double last_logged_vx_{0.0};
+  double last_logged_vy_{0.0};
+  double last_logged_vz_{0.0};
+  double last_logged_time_{0.0};
 };
 
 }  // namespace sura_sensors

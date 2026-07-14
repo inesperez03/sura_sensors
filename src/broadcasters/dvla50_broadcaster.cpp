@@ -82,7 +82,7 @@ controller_interface::CallbackReturn DvlA50Broadcaster::on_configure(
   topic_name_ = get_node()->get_parameter("topic_name").as_string();
 
   publisher_ = get_node()->create_publisher<sura_msgs::msg::DVL>(
-    topic_name_, rclcpp::SystemDefaultsQoS());
+    topic_name_, rclcpp::SensorDataQoS());
 
   return controller_interface::CallbackReturn::SUCCESS;
 }

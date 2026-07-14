@@ -103,7 +103,7 @@
     type="sura_sensors::DvlA50TwistStampedBroadcaster"
     base_class_type="controller_interface::ControllerInterface">
     <description>
-      Water Linked DVL-A50 TwistStamped velocity broadcaster
+      Water Linked DVL-A50 TwistWithCovarianceStamped velocity broadcaster
     </description>
   </class>
 </library>

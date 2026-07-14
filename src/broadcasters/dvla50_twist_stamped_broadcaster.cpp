@@ -2,6 +2,8 @@
 
 #include <pluginlib/class_list_macros.hpp>
 
+#include <algorithm>
+#include <cmath>
 #include <exception>
 #include <string>
 
@@ -13,7 +15,11 @@ controller_interface::CallbackReturn DvlA50TwistStampedBroadcaster::on_init()
   try {
     auto_declare<std::string>("sensor_name", "dvl_sensor");
     auto_declare<std::string>("frame_id", "dvl_link");
-    auto_declare<std::string>("topic_name", "~/twist_stamped");
+    auto_declare<std::string>("topic_name", "~/twist");
+
+    auto_declare<double>("min_linear_velocity_covariance", 0.01);
+    auto_declare<double>("max_linear_velocity_covariance", 999.0);
+    auto_declare<double>("angular_velocity_covariance", 99999.0);
   } catch (const std::exception &) {
     return controller_interface::CallbackReturn::ERROR;
   } catch (...) {
@@ -40,6 +46,7 @@ DvlA50TwistStampedBroadcaster::state_interface_configuration() const
       sensor_name + "/linear_velocity.x",
       sensor_name + "/linear_velocity.y",
       sensor_name + "/linear_velocity.z",
+      sensor_name + "/fom",
     }};
 }
 
@@ -50,8 +57,35 @@ controller_interface::CallbackReturn DvlA50TwistStampedBroadcaster::on_configure
   frame_id_ = get_node()->get_parameter("frame_id").as_string();
   topic_name_ = get_node()->get_parameter("topic_name").as_string();
 
-  publisher_ = get_node()->create_publisher<geometry_msgs::msg::TwistStamped>(
-    topic_name_, rclcpp::SystemDefaultsQoS());
+  min_linear_velocity_covariance_ =
+    get_node()->get_parameter("min_linear_velocity_covariance").as_double();
+  max_linear_velocity_covariance_ =
+    get_node()->get_parameter("max_linear_velocity_covariance").as_double();
+  angular_velocity_covariance_ =
+    get_node()->get_parameter("angular_velocity_covariance").as_double();
+
+  if (!std::isfinite(min_linear_velocity_covariance_) ||
+      min_linear_velocity_covariance_ < 0.0)
+  {
+    min_linear_velocity_covariance_ = 0.01;
+  }
+
+  if (!std::isfinite(max_linear_velocity_covariance_) ||
+      max_linear_velocity_covariance_ < min_linear_velocity_covariance_)
+  {
+    max_linear_velocity_covariance_ = min_linear_velocity_covariance_;
+  }
+
+  if (!std::isfinite(angular_velocity_covariance_) ||
+      angular_velocity_covariance_ < 0.0)
+  {
+    angular_velocity_covariance_ = 99999.0;
+  }
+
+  publisher_ =
+    get_node()->create_publisher<geometry_msgs::msg::TwistWithCovarianceStamped>(
+      topic_name_,
+      rclcpp::SensorDataQoS());
 
   return controller_interface::CallbackReturn::SUCCESS;
 }
@@ -63,7 +97,7 @@ controller_interface::CallbackReturn DvlA50TwistStampedBroadcaster::on_activate(
     return controller_interface::CallbackReturn::ERROR;
   }
 
-  if (state_interfaces_.size() != 3) {
+  if (state_interfaces_.size() != 4) {
     return controller_interface::CallbackReturn::ERROR;
   }
 
@@ -89,19 +123,45 @@ controller_interface::return_type DvlA50TwistStampedBroadcaster::update(
     return controller_interface::return_type::OK;
   }
 
-  if (state_interfaces_.size() != 3) {
+  if (state_interfaces_.size() != 4) {
     return controller_interface::return_type::OK;
   }
 
-  geometry_msgs::msg::TwistStamped msg;
+  const double vx = state_interfaces_[0].get_value();
+  const double vy = state_interfaces_[1].get_value();
+  const double vz = state_interfaces_[2].get_value();
+  const double fom = state_interfaces_[3].get_value();
+
+  const double fom_covariance = std::isfinite(fom) && fom >= 0.0 ? fom * fom :
+    max_linear_velocity_covariance_;
+  const double linear_velocity_covariance = std::clamp(
+    fom_covariance,
+    min_linear_velocity_covariance_,
+    max_linear_velocity_covariance_);
+
+  geometry_msgs::msg::TwistWithCovarianceStamped msg;
   msg.header.stamp = time;
   msg.header.frame_id = frame_id_;
-  msg.twist.linear.x = state_interfaces_[0].get_value();
-  msg.twist.linear.y = state_interfaces_[1].get_value();
-  msg.twist.linear.z = state_interfaces_[2].get_value();
-  msg.twist.angular.x = 0.0;
-  msg.twist.angular.y = 0.0;
-  msg.twist.angular.z = 0.0;
+
+  msg.twist.twist.linear.x = vx;
+  msg.twist.twist.linear.y = vy;
+  msg.twist.twist.linear.z = vz;
+
+  msg.twist.twist.angular.x = 0.0;
+  msg.twist.twist.angular.y = 0.0;
+  msg.twist.twist.angular.z = 0.0;
+
+  for (auto & value : msg.twist.covariance) {
+    value = 0.0;
+  }
+
+  msg.twist.covariance[0] = linear_velocity_covariance;
+  msg.twist.covariance[7] = linear_velocity_covariance;
+  msg.twist.covariance[14] = linear_velocity_covariance;
+
+  msg.twist.covariance[21] = angular_velocity_covariance_;
+  msg.twist.covariance[28] = angular_velocity_covariance_;
+  msg.twist.covariance[35] = angular_velocity_covariance_;
 
   publisher_->publish(msg);
   return controller_interface::return_type::OK;

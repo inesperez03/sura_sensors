@@ -3,7 +3,7 @@
 #include <string>
 
 #include <controller_interface/controller_interface.hpp>
-#include <geometry_msgs/msg/twist_stamped.hpp>
+#include <geometry_msgs/msg/twist_with_covariance_stamped.hpp>
 #include <rclcpp_lifecycle/lifecycle_publisher.hpp>
 #include <rclcpp_lifecycle/state.hpp>
 
@@ -37,7 +37,18 @@ private:
   std::string frame_id_;
   std::string topic_name_;
 
-  rclcpp_lifecycle::LifecyclePublisher<geometry_msgs::msg::TwistStamped>::SharedPtr publisher_;
+  double min_linear_velocity_covariance_{0.01};
+  double max_linear_velocity_covariance_{999.0};
+  double angular_velocity_covariance_{99999.0};
+
+  rclcpp_lifecycle::LifecyclePublisher<
+    geometry_msgs::msg::TwistWithCovarianceStamped
+  >::SharedPtr publisher_;
+
+  bool has_last_logged_publish_{false};
+  double last_logged_vx_{0.0};
+  double last_logged_vy_{0.0};
+  double last_logged_vz_{0.0};
 };
 
 }  // namespace sura_sensors
