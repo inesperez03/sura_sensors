@@ -64,10 +64,10 @@ controller_interface::CallbackReturn BatteryBroadcaster::on_configure(
   topic_name_ = get_node()->get_parameter("topic_name").as_string();
   cell_count_ = get_node()->get_parameter("cell_count").as_int();
 
-  if (cell_count_ < 1) {
+  if (cell_count_ != 4 && cell_count_ != 6) {
     RCLCPP_WARN(
       get_node()->get_logger(),
-      "Invalid battery cell_count=%d. Using 4 cells.",
+      "Invalid battery cell_count=%d. Expected 4 or 6. Using 4 cells.",
       cell_count_);
     cell_count_ = 4;
   }
@@ -173,48 +173,39 @@ double BatteryBroadcaster::battery_percentage(double voltage) const
     return std::numeric_limits<double>::quiet_NaN();
   }
 
-  static constexpr std::array<std::pair<double, double>, 21> lipo_curve{{
-    {3.30, 0.00},
-    {3.61, 0.05},
-    {3.69, 0.10},
-    {3.71, 0.15},
-    {3.73, 0.20},
-    {3.75, 0.25},
-    {3.77, 0.30},
-    {3.79, 0.35},
-    {3.80, 0.40},
-    {3.82, 0.45},
-    {3.84, 0.50},
-    {3.85, 0.55},
+  static constexpr std::array<std::pair<double, double>, 12> li_ion_curve{{
+    {3.00, 0.00},
+    {3.30, 0.05},
+    {3.50, 0.10},
+    {3.62, 0.20},
+    {3.70, 0.30},
+    {3.77, 0.40},
+    {3.83, 0.50},
     {3.87, 0.60},
-    {3.91, 0.65},
-    {3.95, 0.70},
-    {3.98, 0.75},
-    {4.02, 0.80},
-    {4.08, 0.85},
-    {4.11, 0.90},
-    {4.15, 0.95},
+    {3.92, 0.70},
+    {3.98, 0.80},
+    {4.06, 0.90},
     {4.20, 1.00},
   }};
 
   const double cell_voltage = voltage / static_cast<double>(cell_count_);
-  if (cell_voltage <= lipo_curve.front().first) {
-    return lipo_curve.front().second;
+  if (cell_voltage <= li_ion_curve.front().first) {
+    return li_ion_curve.front().second;
   }
-  if (cell_voltage >= lipo_curve.back().first) {
-    return lipo_curve.back().second;
+  if (cell_voltage >= li_ion_curve.back().first) {
+    return li_ion_curve.back().second;
   }
 
-  for (std::size_t index = 1; index < lipo_curve.size(); ++index) {
-    const auto [lower_voltage, lower_percentage] = lipo_curve[index - 1];
-    const auto [upper_voltage, upper_percentage] = lipo_curve[index];
+  for (std::size_t index = 1; index < li_ion_curve.size(); ++index) {
+    const auto [lower_voltage, lower_percentage] = li_ion_curve[index - 1];
+    const auto [upper_voltage, upper_percentage] = li_ion_curve[index];
     if (cell_voltage <= upper_voltage) {
       const double ratio = (cell_voltage - lower_voltage) / (upper_voltage - lower_voltage);
       return lower_percentage + ratio * (upper_percentage - lower_percentage);
     }
   }
 
-  return lipo_curve.back().second;
+  return li_ion_curve.back().second;
 }
 
 }  // namespace sura_sensors
