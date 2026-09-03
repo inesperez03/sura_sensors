@@ -48,6 +48,7 @@ BatteryBroadcaster::state_interface_configuration() const
     {
       sensor_name + "/voltage",
       sensor_name + "/current",
+      sensor_name + "/percentage",
       sensor_name + "/present",
     }};
 }
@@ -80,10 +81,10 @@ controller_interface::CallbackReturn BatteryBroadcaster::on_activate(
     return controller_interface::CallbackReturn::ERROR;
   }
 
-  if (state_interfaces_.size() != 3) {
+  if (state_interfaces_.size() != 4) {
     RCLCPP_ERROR(
       get_node()->get_logger(),
-      "Expected 3 state interfaces, got %zu",
+      "Expected 4 state interfaces, got %zu",
       state_interfaces_.size());
     return controller_interface::CallbackReturn::ERROR;
   }
@@ -112,26 +113,27 @@ controller_interface::return_type BatteryBroadcaster::update(
     return controller_interface::return_type::OK;
   }
 
-  if (state_interfaces_.size() != 3) {
+  if (state_interfaces_.size() != 4) {
     RCLCPP_ERROR_THROTTLE(
       get_node()->get_logger(),
       *get_node()->get_clock(),
       1000,
-      "BatteryBroadcaster expected 3 state interfaces, got %zu",
+      "BatteryBroadcaster expected 4 state interfaces, got %zu",
       state_interfaces_.size());
     return controller_interface::return_type::OK;
   }
 
   const double voltage = state_interfaces_[0].get_value();
   const double current = state_interfaces_[1].get_value();
-  const double present = state_interfaces_[2].get_value();
+  const double percentage = state_interfaces_[2].get_value();
+  const double present = state_interfaces_[3].get_value();
 
   sensor_msgs::msg::BatteryState msg;
   msg.header.stamp = time;
   msg.header.frame_id = frame_id_;
   msg.voltage = static_cast<float>(voltage);
   msg.current = static_cast<float>(current);
-  msg.percentage = std::numeric_limits<float>::quiet_NaN();
+  msg.percentage = static_cast<float>(percentage);
   msg.present = present > 0.5;
   msg.power_supply_status =
     sensor_msgs::msg::BatteryState::POWER_SUPPLY_STATUS_DISCHARGING;

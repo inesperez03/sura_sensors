@@ -9,6 +9,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(controller_interface REQUIRED)
@@ -29,6 +30,7 @@ add_library(${PROJECT_NAME} SHARED
   src/broadcasters/magnetometer_broadcaster.cpp
   src/broadcasters/pressure_broadcaster.cpp
   src/broadcasters/battery_broadcaster.cpp
+  src/broadcasters/leak_broadcaster.cpp
   src/broadcasters/dvl75_vel_broadcaster.cpp
   src/broadcasters/dvl75_altitude_broadcaster.cpp
   src/broadcasters/dvl75_gps_broadcaster.cpp
@@ -45,6 +47,7 @@ ament_target_dependencies(${PROJECT_NAME}
   rclcpp
   rclcpp_lifecycle
   sensor_msgs
+  std_msgs
   geometry_msgs
 )
 

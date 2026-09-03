@@ -34,6 +34,14 @@
     </description>
   </class>
   <class
+    name="sura_sensors/LeakBroadcaster"
+    type="sura_sensors::LeakBroadcaster"
+    base_class_type="controller_interface::ControllerInterface">
+    <description>
+      Broadcasts leak state from ros2_control state interfaces.
+    </description>
+  </class>
+  <class
     name="sura_sensors/DvlVelBroadcaster"
     type="sura_sensors::DvlVelBroadcaster"
     base_class_type="controller_interface::ControllerInterface">
