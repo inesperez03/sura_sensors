@@ -67,6 +67,14 @@
     </description>
   </class>
   <class
+    name="sura_sensors/MultibeamBroadcaster"
+    type="sura_sensors::MultibeamBroadcaster"
+    base_class_type="controller_interface::ControllerInterface">
+    <description>
+      Broadcasts multibeam point clouds, ATOF pings, attitude, water stats, and diagnostics.
+    </description>
+  </class>
+  <class
     name="sura_sensors/DvlVelBroadcaster"
     type="sura_sensors::DvlVelBroadcaster"
     base_class_type="controller_interface::ControllerInterface">

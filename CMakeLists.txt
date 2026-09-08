@@ -13,6 +13,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(sura_msgs REQUIRED)
+find_package(diagnostic_msgs REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(pluginlib REQUIRED)
@@ -51,6 +52,7 @@ add_library(${PROJECT_NAME} SHARED
   src/broadcasters/battery_broadcaster.cpp
   src/broadcasters/leak_broadcaster.cpp
   src/broadcasters/altimeter_blueboat_broadcaster.cpp
+  src/broadcasters/multibeam_broadcaster.cpp
   src/broadcasters/gps_broadcaster.cpp
   src/broadcasters/dvl75_vel_broadcaster.cpp
   src/broadcasters/dvl75_altitude_broadcaster.cpp
@@ -74,6 +76,7 @@ ament_target_dependencies(${PROJECT_NAME}
   nav_msgs
   std_msgs
   sura_msgs
+  diagnostic_msgs
 )
 
 pluginlib_export_plugin_description_file(
