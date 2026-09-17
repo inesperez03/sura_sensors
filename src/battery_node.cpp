@@ -23,7 +23,7 @@ BatteryNode::BatteryNode()
   init();
 
   battery_publisher_ = this->create_publisher<sensor_msgs::msg::BatteryState>(
-    "/sura/sensors/battery", 10);
+    "sensors/battery", 10);
 
   timer_ = this->create_wall_timer(
     1000ms,

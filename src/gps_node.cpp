@@ -36,7 +36,7 @@ GpsNode::GpsNode()
 : Node("gps_node"), fd_(-1)
 {
   gps_publisher_ = this->create_publisher<sensor_msgs::msg::NavSatFix>(
-    "/sura/sensors/gps/fix", 10);
+    "sensors/gps/fix", 10);
 
   if (!open_serial()) {
     RCLCPP_ERROR(this->get_logger(), "Could not open %s", SERIAL_PORT);

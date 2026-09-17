@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -38,6 +39,10 @@ private:
   std::string sensor_name_{"imu_sensor"};
   std::string frame_id_{"imu_link"};
   std::string topic_name_{"~/magnetic_field"};
+
+  bool has_last_sample_time_{false};
+  int32_t last_sample_time_sec_{0};
+  uint32_t last_sample_time_nanosec_{0};
 
   rclcpp_lifecycle::LifecyclePublisher<sensor_msgs::msg::MagneticField>::SharedPtr publisher_;
 };
